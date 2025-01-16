@@ -49,16 +49,16 @@ export const useStudioSettings = (
   useEffect(() => {
     const subscribe = watch(values => {
       mutate({
-        screen: values.screen || '',
-        audio: values.audio || '',
-        preset: values.preset || 'SD',
+        screen: values.screen || screen || '',
+        audio: values.audio || audio || '',
+        preset: values.preset || preset || 'SD',
         id,
       });
       window.ipcRenderer.send('media-sources', {
-        screen: values.screen,
+        screen: values.screen || screen,
         id,
-        audio: values.audio,
-        preset: values.preset,
+        audio: values.audio || audio,
+        preset: values.preset || preset,
         plan,
       });
     });

@@ -49,6 +49,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
+    "double-ended-queue": "^2.1.0-0",
     "embla-carousel-react": "^8.5.1",
     "input-otp": "^1.4.1",
     "lucide-react": "^0.469.0",
@@ -68,6 +69,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/double-ended-queue": "^2.1.7",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
     "@typescript-eslint/eslint-plugin": "^7.1.1",

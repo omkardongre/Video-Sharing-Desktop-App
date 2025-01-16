@@ -44,7 +44,7 @@ const Widget = () => {
         </div>
       </ClerkLoading>
       <SignedIn>
-        {profile && profile.user ? (
+        {profile && profile.user && state && !state.isPending ? (
           <MediaConfiguration state={state} user={profile.user} />
         ) : (
           <div className="w-full h-full flex justify-center items-center">

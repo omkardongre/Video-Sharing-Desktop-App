@@ -2,6 +2,7 @@ import { onStopRecording, selectSources, StartRecording } from '@/lib/recorder';
 import { cn, videoRecordingTime } from '@/lib/utils';
 import { Cast, Pause, Square } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 interface SourcesPayload {
   screen: string;
@@ -27,7 +28,6 @@ const StudioTray = () => {
   // IPC listener setup
   useEffect(() => {
     const handleProfileReceived = (_: unknown, payload: SourcesPayload) => {
-      console.log('Profile received:', payload);
       setOnSources(payload);
     };
 
@@ -97,7 +97,7 @@ const StudioTray = () => {
     setRecording(false);
     setOnTimer('00:00:00');
     onStopRecording();
-    alert('File downloaded successfully');
+    toast('File downloaded successfully');
   };
 
   const startRecording = () => {
@@ -129,8 +129,10 @@ const StudioTray = () => {
         <div
           onClick={startRecording}
           className={cn(
-            'non-draggable rounded-full cursor-pointer relative hover:opacity-80',
-            recording ? 'bg-red-500 w-6 h-6' : 'bg-red-400 w-8 h-8'
+            'non-draggable rounded-full relative',
+            recording
+              ? ['bg-red-500 w-6 h-6 pointer-events-none opacity-50']
+              : ['bg-red-400 w-8 h-8 cursor-pointer hover:opacity-80']
           )}
         >
           {recording && (

@@ -164,10 +164,10 @@ ipcMain.handle('getSources', async () => {
 
   return data;
 });
-ipcMain.on('media-sources', (event, payload) => {
+ipcMain.on('media-sources', (_event, payload) => {
   studio?.webContents.send('profile-received', payload);
 });
-ipcMain.on('resize-studio', (event, payload) => {
+ipcMain.on('resize-studio', (_event, payload) => {
   if (payload.shrink) {
     studio?.setSize(400, 100);
   }
@@ -175,7 +175,7 @@ ipcMain.on('resize-studio', (event, payload) => {
     studio?.setSize(400, 250);
   }
 });
-ipcMain.on('hide-plugin', (event, payload) => {
+ipcMain.on('hide-plugin', (_event, payload) => {
   win?.webContents.send('hide-plugin', payload);
 });
 

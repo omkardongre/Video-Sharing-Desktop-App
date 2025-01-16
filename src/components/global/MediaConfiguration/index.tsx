@@ -42,10 +42,10 @@ const MediaConfiguration = ({ state, user }: Props) => {
         <select
           {...register('screen')}
           className="outline-none cursor-pointer px-5 py-2 rounded-xl border-2 text-white  border-[#575655] bg-transparent w-full"
+          defaultValue={activeScreen?.id || state.displays?.[0]?.id}
         >
           {state.displays?.map(display => (
             <option
-              selected={activeScreen && activeScreen.id === display.id}
               key={display.id}
               value={display.id}
               className="bg-[#171717] cursor-pointer"
@@ -60,10 +60,12 @@ const MediaConfiguration = ({ state, user }: Props) => {
         <select
           {...register('audio')}
           className="outline-none cursor-pointer px-5 py-2 rounded-xl border-2 text-white  border-[#575655] bg-transparent w-full"
+          defaultValue={
+            activeAudio?.deviceId || state.audioInput?.[0]?.deviceId
+          }
         >
           {state.audioInput?.map(audio => (
             <option
-              selected={activeAudio && activeAudio.deviceId === audio.deviceId}
               key={audio.deviceId}
               value={audio.deviceId}
               className="bg-[#171717] cursor-pointer"
@@ -78,10 +80,10 @@ const MediaConfiguration = ({ state, user }: Props) => {
         <select
           {...register('preset')}
           className="outline-none cursor-pointer px-5 py-2 rounded-xl border-2 text-white  border-[#575655] bg-transparent w-full"
+          defaultValue={user?.studio?.preset}
         >
           <option
             disabled={user?.subscription?.plan === 'FREE'}
-            selected={user?.studio?.preset === 'HD'}
             value={'HD'}
             className="bg-[#171717] cursor-pointer"
           >
@@ -90,7 +92,6 @@ const MediaConfiguration = ({ state, user }: Props) => {
           </option>
           <option
             disabled={user?.subscription?.plan === 'FREE'}
-            selected={user?.studio?.preset === 'SD'}
             value={'SD'}
             className="bg-[#171717] cursor-pointer"
           >

@@ -1,12 +1,17 @@
 import { hidePluginWindow } from './utils';
 import { v4 as uuid } from 'uuid';
 import io from 'socket.io-client';
+import { toast } from 'sonner';
+import Deque from 'double-ended-queue';
 
 // Global variables
 let videoTransferFileName: string | undefined;
 let mediaRecorder: MediaRecorder;
 let userId: string;
 let videoWriteStream: any = null;
+const chunkBuffer = new Deque<{ data: Blob; filename: string }>();
+let isPermanentlyDisconnected = false;
+let isProcessingQueue = false;
 
 // Socket connection
 const socket = io(import.meta.env.VITE_SOCKET_URL as string, {
@@ -17,6 +22,66 @@ const socket = io(import.meta.env.VITE_SOCKET_URL as string, {
   timeout: 20000,
   transports: ['websocket', 'polling'],
 });
+
+socket.on('connect', () => {
+  console.log('Reconnected to the server.');
+  processChunkQueue();
+});
+
+socket.on('disconnect', () => {
+  console.warn('Disconnected from the server.');
+});
+
+socket.io.on('reconnect_failed', () => {
+  console.error('Failed to reconnect to the server after multiple attempts.');
+  isPermanentlyDisconnected = true;
+  toast(
+    'Server connection lost: Recording will continue locally. Please check your internet connection.'
+  );
+});
+
+const processChunkQueue = async () => {
+  // log to print chunkBuffer size
+  console.log(
+    'Chunk buffer size:',
+    chunkBuffer.length,
+    'isProcessingQueue:',
+    isProcessingQueue
+  );
+
+  if (isProcessingQueue || chunkBuffer.isEmpty() || !socket.connected) return;
+
+  isProcessingQueue = true;
+  // Get first item without removing it
+  const firstChunk = chunkBuffer.peekFront()!;
+
+  try {
+    await new Promise<void>((resolve, reject) => {
+      socket
+        .timeout(5000)
+        .emit(
+          'video-chunks',
+          { chunks: firstChunk.data, filename: firstChunk.filename },
+          (err: Error | null, ack: boolean) => {
+            if (err || !ack) {
+              reject(err || new Error('No acknowledgment received'));
+            } else {
+              chunkBuffer.shift();
+              resolve();
+            }
+          }
+        );
+    });
+  } catch (error) {
+    console.error('Failed to send chunk:', error);
+  }
+
+  isProcessingQueue = false;
+  // Continue processing if there are more chunks
+  if (!chunkBuffer.isEmpty()) {
+    setTimeout(processChunkQueue, 0);
+  }
+};
 
 // Start recording function
 export const StartRecording = (onSources: {
@@ -76,27 +141,18 @@ const stopRecording = () => {
 // MediaRecorder data available event handler
 export const onDataAvailable = async (e: BlobEvent) => {
   if (e.data.size > 0 && videoTransferFileName) {
-    // Send to server immediately
-    socket.emit('video-chunks', {
-      chunks: e.data,
-      filename: videoTransferFileName,
-    });
-
     try {
-      // Convert Blob to Buffer
-      const arrayBuffer = await e.data.arrayBuffer();
+      if (!isPermanentlyDisconnected) {
+        chunkBuffer.push({ data: e.data, filename: videoTransferFileName });
+        processChunkQueue();
+      }
 
-      const result = await window.ipcRenderer.invoke(
+      const arrayBuffer = await e.data.arrayBuffer();
+      await window.ipcRenderer.invoke(
         'writeVideoChunk',
         arrayBuffer,
         videoTransferFileName
       );
-
-      if (result.success) {
-        console.log('Chunk written successfully');
-      } else {
-        console.error('Error writing chunk:', result.error);
-      }
     } catch (error) {
       console.error('Error writing video chunk to file:', error);
     }

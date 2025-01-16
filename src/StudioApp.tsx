@@ -1,8 +1,13 @@
-import StudioTray from "./components/global/StudioTray";
+import { Toaster } from 'sonner';
+import StudioTray from './components/global/StudioTray';
 
 function StudioApp() {
-  return <StudioTray />;
+  return (
+    <>
+      <StudioTray />
+      <Toaster />
+    </>
+  );
 }
-
 
 export default StudioApp;
