@@ -3,48 +3,60 @@ import { cn, videoRecordingTime } from '@/lib/utils';
 import { Cast, Pause, Square } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
+interface SourcesPayload {
+  screen: string;
+  id: string;
+  audio: string;
+  preset: 'HD' | 'SD';
+  plan: 'PRO' | 'FREE';
+}
+
 const StudioTray = () => {
-  const initialTime = new Date();
+  const initialTime = useRef(new Date());
   const videoElement = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
 
   const [preview, setPreview] = useState(false);
   const [onTimer, setOnTimer] = useState<string>('00:00:00');
-  const [count, setCount] = useState<number>(0);
   const [recording, setRecording] = useState(false);
-  const [onSources, setOnSources] = useState<
-    | {
-        screen: string;
-        id: string;
-        audio: string;
-        preset: 'HD' | 'SD';
-        plan: 'PRO' | 'FREE';
-      }
-    | undefined
-  >(undefined);
+  const [onSources, setOnSources] = useState<SourcesPayload | undefined>(
+    undefined
+  );
 
-  // Listen for profile data
-  window.ipcRenderer.on('profile-received', (_, payload) => {
-    setOnSources(payload);
-  });
+  // IPC listener setup
+  useEffect(() => {
+    const handleProfileReceived = (_: unknown, payload: SourcesPayload) => {
+      console.log('Profile received:', payload);
+      setOnSources(payload);
+    };
+
+    // Add listener
+    window.ipcRenderer.on('profile-received', handleProfileReceived);
+
+    // Cleanup listener
+    return () => {
+      window.ipcRenderer.off('profile-received', handleProfileReceived);
+    };
+  }, []);
 
   useEffect(() => {
-    // Setup function
     const setupSources = async () => {
-      if (onSources && onSources.screen) {
-        // Only create new streams if we don't have one or sources changed
-        if (!streamRef.current) {
+      if (onSources?.screen && !streamRef.current) {
+        try {
           const { stream, mediaRecorder } = await selectSources(onSources);
-          streamRef.current = stream;
-          recorderRef.current = mediaRecorder;
+          if (stream && mediaRecorder) {
+            streamRef.current = stream;
+            recorderRef.current = mediaRecorder;
+          }
+        } catch (error) {
+          console.error('Error setting up sources:', error);
         }
       }
     };
 
     setupSources();
 
-    // Cleanup function
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
@@ -57,49 +69,54 @@ const StudioTray = () => {
   }, [onSources]);
 
   useEffect(() => {
-    // preview mode
     if (videoElement.current && streamRef.current) {
       videoElement.current.srcObject = preview ? streamRef.current : null;
     }
   }, [preview]);
 
-  // Timer and recording management
   useEffect(() => {
-    if (!recording) return;
+    if (!recording) {
+      return;
+    }
 
     const recordTimeInterval = setInterval(() => {
-      const time = count + (new Date().getTime() - initialTime.getTime());
-      const recordingTime = videoRecordingTime(time);
+      const elapsedTime = new Date().getTime() - initialTime.current.getTime();
+      const recordingTime = videoRecordingTime(elapsedTime);
 
-      setCount(time);
       setOnTimer(recordingTime.length);
 
-      if (onSources?.plan === 'FREE' && recordingTime.minute == '05') {
-        setRecording(false);
-        clearTime();
-        onStopRecording();
+      if (onSources?.plan === 'FREE' && recordingTime.minute === '05') {
+        stopRecording();
       }
     }, 100);
-    return () => clearInterval(recordTimeInterval);
-  }, [recording]);
 
-  // Stop recording
+    return () => clearInterval(recordTimeInterval);
+  }, [recording, onSources?.plan]);
+
   const stopRecording = () => {
     setRecording(false);
-    clearTime();
-    onStopRecording();
-  };
-
-  // Reset timer
-  const clearTime = () => {
     setOnTimer('00:00:00');
-    setCount(0);
+    onStopRecording();
+    alert('File downloaded successfully');
   };
 
-  // UI Rendering
-  return !onSources ? (
-    <>No sources available</>
-  ) : (
+  const startRecording = () => {
+    if (!onSources) return;
+
+    setRecording(true);
+    initialTime.current = new Date();
+    StartRecording({
+      audio: onSources.audio,
+      id: onSources.id,
+      screen: onSources.screen,
+    });
+  };
+
+  if (!onSources) {
+    return <div className="text-white/60">No sources available</div>;
+  }
+
+  return (
     <div className="flex flex-col justify-end gap-y-5 draggable">
       {preview && (
         <video
@@ -110,14 +127,7 @@ const StudioTray = () => {
       )}
       <div className="rounded-full flex justify-around items-center h-20 w-full border-2 bg-[#171717] draggable border-white/40">
         <div
-          onClick={() => {
-            setRecording(true);
-            StartRecording({
-              audio: onSources.audio,
-              id: onSources.id,
-              screen: onSources.screen,
-            });
-          }}
+          onClick={startRecording}
           className={cn(
             'non-draggable rounded-full cursor-pointer relative hover:opacity-80',
             recording ? 'bg-red-500 w-6 h-6' : 'bg-red-400 w-8 h-8'

@@ -2,22 +2,42 @@ import { useEffect, useRef } from 'react';
 
 const Webcam = () => {
   const webcamRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const streamWebcam = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: true,
-    });
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true,
+      });
 
-    if (webcamRef && webcamRef.current) {
-      webcamRef.current.srcObject = stream;
+      streamRef.current = stream;
 
-      await webcamRef.current.play();
+      if (webcamRef.current) {
+        webcamRef.current.srcObject = stream;
+        try {
+          await webcamRef.current.play();
+        } catch (err) {
+          console.error('Error playing video:', err);
+        }
+      }
+    } catch (err) {
+      console.error('Error accessing webcam:', err);
     }
   };
 
   useEffect(() => {
     streamWebcam();
+
+    return () => {
+      // Cleanup: stop all tracks when component unmounts
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (webcamRef.current) {
+        webcamRef.current.srcObject = null;
+      }
+    };
   }, []);
 
   return (

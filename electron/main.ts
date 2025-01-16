@@ -2,6 +2,8 @@ import { app, BrowserWindow, desktopCapturer, ipcMain } from 'electron';
 
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import fs from 'fs';
+import os from 'os';
 
 // TODO: Enable Wayland support on Linux
 // if (process.platform === 'linux') {
@@ -176,6 +178,21 @@ ipcMain.on('resize-studio', (event, payload) => {
 ipcMain.on('hide-plugin', (event, payload) => {
   win?.webContents.send('hide-plugin', payload);
 });
+
+ipcMain.handle(
+  'writeVideoChunk',
+  async (_event, arrayBuffer: ArrayBuffer, fileName: string) => {
+    try {
+      const buffer = Buffer.from(arrayBuffer);
+      const filePath = path.join(os.homedir(), 'Downloads', fileName);
+      fs.appendFileSync(filePath, buffer);
+      return { success: true, path: filePath };
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  }
+);
+
 app.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
