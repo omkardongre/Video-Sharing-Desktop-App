@@ -28,3 +28,6 @@ dist-ssr
 
 # Electron build output
 /dist-electron/
+
+# Release
+release/
