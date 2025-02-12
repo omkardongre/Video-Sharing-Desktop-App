@@ -1,31 +1,136 @@
-# React + TypeScript + Vite
+# Video Sharing Desktop Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A cross-platform desktop application built with Electron and React for screen recording and video sharing. This application works in conjunction with a web platform for seamless video content management.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Screen Recording**
+  - High-quality screen capture (720p and 1080p)
+  - Audio device selection
+  - Custom preset configurations
+  - Real-time preview
+  - Configurable recording duration based on subscription plan
 
-## Expanding the ESLint configuration
+- **Authentication**
+  - Secure user authentication via Clerk
+  - Seamless integration with web platform accounts
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- **Device Management**
+  - Multiple screen source selection
+  - Audio input device selection
+  - Webcam support
+  - Device preset saving
 
-- Configure the top-level `parserOptions` property like this:
+- **Cross-Platform Support**
+  - Windows
+  - macOS
+  - Linux
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+## 🛠️ Tech Stack
+
+- **Framework**: Electron + React
+- **Language**: TypeScript
+- **UI Components**: Radix UI + Tailwind CSS
+- **Authentication**: Clerk
+- **State Management**: React Query
+- **Real-time Communication**: Socket.IO
+- **Build Tools**: Vite
+- **Form Handling**: React Hook Form + Zod
+
+## 📦 Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/video-sharing-desktop-app.git
+cd video-sharing-desktop-app
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
-# Video-Sharing-Desktop-App
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Create a `.env.local` file with required environment variables:
+```env
+VITE_CLERK_PUBLISHABLE_KEY=your_clerk_key
+VITE_HOST_URL=http://localhost:3000/api
+VITE_APP_URL=http://localhost:5173
+VITE_SOCKET_URL=http://localhost:5000
+```
+
+## 🚀 Development
+
+Start the development server:
+```bash
+npm run dev
+```
+
+## 🏗️ Building
+
+### Windows
+```bash
+npm run build:win
+```
+
+### macOS
+```bash
+npm run build:mac
+```
+
+### Linux
+```bash
+npm run build:linux
+```
+
+### All Platforms
+```bash
+npm run build:all
+```
+
+## 📁 Project Structure
+
+- `/src` - Application source code
+  - `/components` - React components
+  - `/hooks` - Custom React hooks
+  - `/lib` - Utility functions and helpers
+  - `/layouts` - Layout components
+  - `/types` - TypeScript type definitions
+  - `/schemas` - Zod validation schemas
+
+- `/electron` - Electron main process code
+  - `main.ts` - Main process entry
+  - `preload.ts` - Preload scripts
+
+## 🔒 Security
+
+- Uses contextBridge for secure IPC communication
+- Implements proper permission handling for device access
+- Secure authentication flow with Clerk
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project was created for learning purposes, inspired by Web Prodigies https://www.youtube.com/watch?v=3R63m4sTpKo
+
+
+## 👤 Author
+
+Omkar D
+
+## 👨‍💻 Author
+
+Omkar Dongre
+- Email: omkardongre5@gmail.com
+
+## 🙏 Acknowledgments
+
+- Electron team for the amazing framework
+- Radix UI for the component library
+- Clerk for authentication services
