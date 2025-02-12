@@ -44,8 +44,8 @@ let floatingWebCam: BrowserWindow | null;
 function createWindow() {
   win = new BrowserWindow({
     width: 500,
-    height: 600,
-    minHeight: 600,
+    height: 500,
+    maxHeight: 600,
     minWidth: 300,
     frame: false,
     transparent: true,
@@ -53,7 +53,7 @@ function createWindow() {
     focusable: true,
     resizable: true,
     movable: true,
-    icon: path.join(process.env.VITE_PUBLIC, 'logo.svg'),
+    icon: path.join(process.env.VITE_PUBLIC, 'logo.png'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -61,78 +61,111 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.mjs'),
     },
   });
-  studio = new BrowserWindow({
-    width: 400,
-    height: 250,
-    minHeight: 70,
-    maxHeight: 400,
-    minWidth: 300,
-    maxWidth: 400,
-    frame: false,
-    transparent: true,
-    alwaysOnTop: false,
-    focusable: true,
-    resizable: true,
-    movable: true,
-    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      devTools: true,
-      preload: path.join(__dirname, 'preload.mjs'),
-    },
-  });
-  floatingWebCam = new BrowserWindow({
-    width: 200,
-    height: 200,
-    minHeight: 100,
-    maxHeight: 400,
-    minWidth: 100,
-    maxWidth: 400,
-    frame: false,
-    transparent: true,
-    alwaysOnTop: false,
-    focusable: true,
-    resizable: true,
-    movable: true,
-    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      devTools: true,
-      preload: path.join(__dirname, 'preload.mjs'),
-    },
-  });
-
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   win.setAlwaysOnTop(true, 'screen-saver', 1);
-  studio.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  studio.setAlwaysOnTop(true, 'screen-saver', 1);
-  floatingWebCam.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  floatingWebCam.setAlwaysOnTop(true, 'screen-saver', 1);
+  
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', new Date().toLocaleString());
   });
 
-  studio.webContents.on('did-finish-load', () => {
-    studio?.webContents.send(
-      'main-process-message',
-      new Date().toLocaleString()
-    );
-  });
-
   if (VITE_DEV_SERVER_URL) {
+    // Development mode
     win.loadURL(VITE_DEV_SERVER_URL);
-    studio.loadURL(`${import.meta.env.VITE_APP_URL}/studio.html`);
-    floatingWebCam.loadURL(`${import.meta.env.VITE_APP_URL}/webcam.html`);
   } else {
-    // win.loadFile('dist/index.html')
-    win.loadURL(`file://${path.join(RENDERER_DIST, 'index.html')}`);
-    studio.loadURL(`file://${path.join(RENDERER_DIST, 'studio.html')}`);
-    floatingWebCam.loadURL(`file://${path.join(RENDERER_DIST, 'webcam.html')}`);
+    // Production mode
+    const indexPath = path.join(RENDERER_DIST, 'index.html');
+    win.loadFile(indexPath);
   }
 }
+
+// Create the secondary windows (studio and webcam) on demand
+function createSecondaryWindows() {
+  if (!studio) {
+    studio = new BrowserWindow({
+      width: 400,
+      height: 250,
+      minHeight: 70,
+      maxHeight: 400,
+      minWidth: 300,
+      maxWidth: 400,
+      frame: false,
+      transparent: true,
+      alwaysOnTop: false,
+      focusable: true,
+      resizable: true,
+      movable: true,
+      icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        devTools: true,
+        preload: path.join(__dirname, 'preload.mjs'),
+      },
+    });
+    studio.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    studio.setAlwaysOnTop(true, 'screen-saver', 1);
+    studio.webContents.on('did-finish-load', () => {
+      studio?.webContents.send('main-process-message', new Date().toLocaleString());
+    });
+    if (VITE_DEV_SERVER_URL) {
+      studio.loadURL(`${VITE_DEV_SERVER_URL}/studio.html`);
+    } else {
+      const studioPath = path.join(RENDERER_DIST, 'studio.html');
+      studio.loadFile(studioPath);
+    }
+  }
+
+  if (!floatingWebCam) {
+    floatingWebCam = new BrowserWindow({
+      width: 200,
+      height: 200,
+      minHeight: 100,
+      maxHeight: 400,
+      minWidth: 100,
+      maxWidth: 400,
+      frame: false,
+      transparent: true,
+      alwaysOnTop: false,
+      focusable: true,
+      resizable: true,
+      movable: true,
+      icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        devTools: true,
+        preload: path.join(__dirname, 'preload.mjs'),
+      },
+    });
+    floatingWebCam.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    floatingWebCam.setAlwaysOnTop(true, 'screen-saver', 1);
+    floatingWebCam.webContents.on('did-finish-load', () => {
+      floatingWebCam?.webContents.send('main-process-message', new Date().toLocaleString());
+    });
+    if (VITE_DEV_SERVER_URL) {
+      floatingWebCam.loadURL(`${VITE_DEV_SERVER_URL}/webcam.html`);
+    } else {
+      const webcamPath = path.join(RENDERER_DIST, 'webcam.html');
+      floatingWebCam.loadFile(webcamPath);
+    }
+  }
+}
+
+ipcMain.on('login-success', () => {
+  createSecondaryWindows();
+});
+
+ipcMain.on('logout-success', () => {
+  if (studio) {
+    studio.close();
+    studio = null;
+  }
+  if (floatingWebCam) {
+    floatingWebCam.close();
+    floatingWebCam = null;
+  }
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
@@ -164,6 +197,7 @@ ipcMain.handle('getSources', async () => {
 
   return data;
 });
+
 ipcMain.on('media-sources', (_event, payload) => {
   studio?.webContents.send('profile-received', payload);
 });
