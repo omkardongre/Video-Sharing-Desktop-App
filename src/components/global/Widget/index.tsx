@@ -5,6 +5,8 @@ import { fetchUserProfile } from '@/lib/utils';
 import { useMediaSources } from '@/hooks/useMediaSources';
 import MediaConfiguration from '../MediaConfiguration';
 import { ProfileState } from '@/types/user';
+import { toast } from 'sonner';
+
 
 const Widget = () => {
   const [profile, setProfile] = useState<ProfileState>(null);
@@ -19,6 +21,7 @@ const Widget = () => {
           setProfile(profile);
         } catch (error) {
           console.error('Error fetching user profile:', error);
+          toast.error('Please ensure you have an account on the video sharing website at https://videosharing.omkard.site/ to access this feature.');
         }
       })();
     }
